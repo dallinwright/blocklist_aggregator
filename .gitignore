@@ -8,3 +8,4 @@ jspm_packages
 .build
 blocklist-ipsets
 blocklist_aggregator
+.nyc_output
