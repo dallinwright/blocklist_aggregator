@@ -13,7 +13,7 @@ describe('Lambda Handler Tests', () => { // the tests container
         it('Should clone a given repo, even if it already exists', async () => {
             const repo = 'https://github.com/dallinwright/blocklist_aggregator.git';
             await expect(await cloneRepo(repo)).to.be.undefined;
-        })
+        }).timeout(10000);
     });
 
     describe('File List Parse', () => {
