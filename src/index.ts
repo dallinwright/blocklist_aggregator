@@ -12,27 +12,39 @@ const createResponse = (statusCode: number, body: any) => ({
     body: JSON.stringify(body)
 });
 
-async function cloneRepo() {
-    if (process.env.BASE_REPO) {
-        const repo = process.env.BASE_REPO;
+export async function cloneRepo(repo: string | undefined) {
+    if (repo) {
         const gitPath = repo.slice(repo.lastIndexOf('/') + 1);
         const path = gitPath.slice(0, gitPath.lastIndexOf('.'));
 
         shell.rm('-rf', path);
-        shell.exec(`git clone ${process.env.BASE_REPO}`);
+        shell.exec(`git clone ${repo}`);
 
         if (shell.error()) {
             throw new Error(shell.error());
         }
     } else {
-        throw new Error("No Repo given for ip blacklist baseline.");
+        throw new Error("No repo given for ip blacklist baseline");
     }
 }
+
+// function getLists() {
+//     if (process.env.BLOCK_LISTS) {
+//         const list = process.env.BLOCK_LISTS.split(',');
+//         console.log('BLOCK LISTS');
+//         console.log(list);
+//     } else {
+//         throw new Error("No Env var specifying block lists.");
+//     }
+// }
 
 
 export const handler: Handler = async (event: any, context: Context, callback: Callback) => {
     try {
-        await cloneRepo();
+        await cloneRepo(process.env.BASE_REPO);
+
+        // getLists();
+
         return createResponse(200, 'ok');
     } catch (e) {
         return createResponse(503, e.message);
