@@ -18,7 +18,7 @@
     "typescript": "^3.9.7"
   },
   "scripts": {
-    "test": "mocha"
+    "run": "serverless invoke local --function index"
   },
   "repository": {
     "type": "git",
