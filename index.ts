@@ -1,10 +1,6 @@
-import { Handler, Context, Callback } from 'aws-lambda';
+import {Callback, Context, Handler} from 'aws-lambda';
+import {APIResponse} from "./interfaces/APIResponse";
 
-interface APIResponse {
-    statusCode: number;
-    body: string;
-    headers: any;
-}
 
 const createResponse = (statusCode: number, body: any) => ({
     statusCode: statusCode,
@@ -17,10 +13,9 @@ const createResponse = (statusCode: number, body: any) => ({
 });
 
 
-const handler: Handler = async (event: any, context: Context, callback: Callback) => {
+export const handler: Handler = async (event: any, context: Context, callback: Callback) => {
     const response: APIResponse = createResponse(200, event);
 
     callback(undefined, response);
 };
 
-export { handler }
