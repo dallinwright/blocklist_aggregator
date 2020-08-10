@@ -28,22 +28,21 @@ export async function cloneRepo(repo: string | undefined) {
     }
 }
 
-// function getLists() {
-//     if (process.env.BLOCK_LISTS) {
-//         const list = process.env.BLOCK_LISTS.split(',');
-//         console.log('BLOCK LISTS');
-//         console.log(list);
-//     } else {
-//         throw new Error("No Env var specifying block lists.");
-//     }
-// }
+function getLists(list: string | undefined) {
+    if (list) {
+        const lists = list.split(',');
+        console.log('BLOCK LISTS');
+        console.log(lists);
+    } else {
+        throw new Error("No Env var specifying block lists.");
+    }
+}
 
 
 export const handler: Handler = async (event: any, context: Context, callback: Callback) => {
     try {
         await cloneRepo(process.env.BASE_REPO);
-
-        // getLists();
+        getLists(process.env.BLOCK_LISTS);
 
         return createResponse(200, 'ok');
     } catch (e) {
