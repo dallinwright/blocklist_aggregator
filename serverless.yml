@@ -1,0 +1,39 @@
+service: blocklist-aggregator
+# app and org for use with dashboard.serverless.com
+app: blocklist-aggregator
+org: dallinwright01
+
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+  - serverless-dynamodb-local
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:stage, 'dev'}
+  region: eu-west-1
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*"
+        - "cloudwatch:*"
+        - "invoke-api:*"
+      Resource:
+        - "*"
+  environment:
+    TABLE_NAME: blocklist-${opt:stage, 'dev'}
+
+functions:
+  index:
+    handler: index.handler
+    events:
+      - http:
+          path: create
+          method: get
+          cors: true
+      - http:
+          path: create
+          method: post
+          cors: true
