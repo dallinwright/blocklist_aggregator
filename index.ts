@@ -1,14 +1,26 @@
+import { Handler, Context, Callback } from 'aws-lambda';
 
-module.exports.handler = async event => {
-  return {
-    statusCode: 200,
-    body: JSON.stringify(
-      {
-        message: 'Go Serverless v1.0! Your function executed successfully!',
-        input: event,
-      },
-      null,
-      2
-    ),
-  };
+interface APIResponse {
+    statusCode: number;
+    body: string;
+    headers: any;
+}
+
+const createResponse = (statusCode: number, body: any) => ({
+    statusCode: statusCode,
+    headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+});
+
+
+const handler: Handler = async (event: any, context: Context, callback: Callback) => {
+    const response: APIResponse = createResponse(200, event);
+
+    callback(undefined, response);
 };
+
+export { handler }
