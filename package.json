@@ -4,13 +4,18 @@
   "description": "Take a list of IP's and create a custom blocklist",
   "main": "index.js",
   "dependencies": {
+    "@types/aws-lambda": "^8.10.59",
+    "aws-lambda": "^1.0.6",
     "husky": "^4.2.5",
     "serverless-dynamodb-local": "^0.2.39",
-    "serverless-plugin-typescript": "^1.1.9",
+    "serverless-iam-roles-per-function": "^2.0.2",
+    "serverless-mocha-plugin": "^1.12.0",
     "serverless-offline": "^6.5.0",
+    "serverless-plugin-typescript": "^1.1.9",
+    "serverless-pseudo-parameters": "^2.5.0",
+    "serverless-tag-api-gateway": "^1.0.0",
     "typescript": "^3.9.7"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "mocha"
   },
