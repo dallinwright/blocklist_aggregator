@@ -4,7 +4,7 @@ import chai = require('chai');
 
 chai.use(require('chai-as-promised'))
 
-describe('Index Tests', () => { // the tests container
+describe('Lambda Handler Tests', () => { // the tests container
     describe('Repo Clone', () => {
         it('Should not clone an undefined repo', async () => {
             await expect(cloneRepo(undefined)).to.be.rejectedWith(Error)
@@ -14,5 +14,9 @@ describe('Index Tests', () => { // the tests container
             const repo = 'https://github.com/dallinwright/blocklist_aggregator.git';
             await expect(await cloneRepo(repo)).to.be.undefined;
         })
+    });
+
+    describe('File List Parse', () => {
+
     });
 });
