@@ -18,10 +18,8 @@ export const handler: Handler = async (event: any, context: Context, callback: C
     const response: APIResponse = createResponse(200, event);
 
 
-    const path = './tmp'
-    shell.cd(path)
-    shell.exec('git clone https://github.com/firehol/blocklist-ipsets');
+    shell.exec(`git clone ${process.env.BASE_REPO}`);
 
-    callback(undefined, response);
+    return await response;
 };
 
