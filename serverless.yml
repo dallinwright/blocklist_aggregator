@@ -1,13 +1,12 @@
 service: blocklist-aggregator
-# app and org for use with dashboard.serverless.com
 app: blocklist-aggregator
 org: dallinwright01
-
 
 plugins:
   - serverless-plugin-typescript
   - serverless-offline
   - serverless-dynamodb-local
+  - serverless-tag-api-gateway
 
 provider:
   name: aws
@@ -24,10 +23,23 @@ provider:
         - "*"
   environment:
     TABLE_NAME: blocklist-${opt:stage, 'dev'}
+  stackTags:
+    Name: ${self:service}
+    service_name: ${self:service}
+    environment: ${opt:stage, self:provider.stage}
+    managed_by: sls
+
+custom:
+  apiGatewayTags:
+    Name: ${self:service}-APIGateway
+    environment: ${opt:stage, self:provider.stage}
+    managed_by: sls
+    stackName: ${self:service}
+    infrastructure_tier: APIGateway
 
 functions:
   index:
-    handler: index.handler
+    handler: src/index.handler
     events:
       - http:
           path: create
