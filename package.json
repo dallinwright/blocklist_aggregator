@@ -1,0 +1,27 @@
+{
+  "name": "blocklist-aggregator",
+  "version": "1.0.0",
+  "description": "Take a list of IP's and create a custom blocklist",
+  "main": "index.js",
+  "dependencies": {
+    "husky": "^4.2.5",
+    "serverless-dynamodb-local": "^0.2.39",
+    "serverless-plugin-typescript": "^1.1.9",
+    "serverless-offline": "^6.5.0",
+    "typescript": "^3.9.7"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dallinwright/blocklist_aggregator.git"
+  },
+  "author": "Dallin Wright",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dallinwright/blocklist_aggregator/issues"
+  },
+  "homepage": "https://github.com/dallinwright/blocklist_aggregator#readme"
+}
