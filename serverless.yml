@@ -1,17 +1,12 @@
 service: blocklist-aggregator
-# app and org for use with dashboard.serverless.com
 app: blocklist-aggregator
 org: dallinwright01
-
 
 plugins:
   - serverless-plugin-typescript
   - serverless-offline
   - serverless-dynamodb-local
   - serverless-tag-api-gateway
-  - serverless-iam-roles-per-function
-  - serverless-pseudo-parameters
-
 
 provider:
   name: aws
