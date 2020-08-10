@@ -23,6 +23,13 @@ provider:
         - "*"
   environment:
     TABLE_NAME: blocklist-${opt:stage, 'dev'}
+    BASE_REPO: https://github.com/firehol/blocklist-ipsets.git
+    BLOCK_LISTS:
+      - blocklist*
+      - spamhaus_edrop
+      - spamhaus_drop
+      - dshield
+      - zeus
   stackTags:
     Name: ${self:service}
     service_name: ${self:service}
