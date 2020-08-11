@@ -83,23 +83,45 @@ async function getAggregateIPS(files: string[]): Promise<Set<string>> {
     return ipSet;
 }
 
-async function writeToDynamoDB(ips: Set<string>) {
-    console.log(ips.size)
-    const params = {
-        RequestItems: {
-            'TABLE_NAME': process.env.TABLE_NAME,
-            PutRequest: {
-                Item: {
-                    IP: '1.1.1.1'
+async function writeToDynamoDB(tableName: string | undefined, ips: Set<string>) {
+    if (tableName) {
+        const ipArr = [...ips];
+        const chunkSize = 25;
+
+        for (let i = 0; i < ipArr.length; i += chunkSize) {
+            const chunk = ipArr.slice(i, i + chunkSize);
+            const requestArr = [];
+
+            for (const ip of chunk) {
+                const requestBody = {
+                    PutRequest: {
+                        Item: {
+                            "IP": ip
+                        }
+                    }
+                }
+
+                requestArr.push(requestBody);
+            }
+
+            const params = {
+                RequestItems: {
+                    [tableName]: [
+                        ...requestArr
+                    ]
                 }
             }
+
+            await ddb.batchWrite(params).promise();
+            console.log('Successfully wrote batch ' + i + ' through ' + (i + chunkSize));
         }
+
+        return 'success';
+    } else {
+        throw new Error("No table name provided");
     }
-
-    console.log('calling batch');
-
-    return await ddb.batchWrite(params).promise();
 }
+
 
 export const handler: Handler = async (event: any, context: Context, callback: Callback) => {
     try {
@@ -110,9 +132,8 @@ export const handler: Handler = async (event: any, context: Context, callback: C
         console.log(matchingFiles);
         const aggregateIps = await getAggregateIPS(matchingFiles);
 
-        await writeToDynamoDB(aggregateIps);
-        // await writeToDynamoDB();
-
+        const response = await writeToDynamoDB(process.env.TABLE_NAME, aggregateIps);
+        console.log(response);
 
         return createResponse(200, 'ok');
     } catch (e) {
