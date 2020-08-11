@@ -22,13 +22,10 @@ provider:
       Resource:
         - "*"
   environment:
-    TABLE_NAME: blocklist-${opt:stage, 'dev'}
+    ES_REGION: eu-west-1
+    ES_ENDPOINT: https://vpc-clillab-d5cxi6isskimi4uqzrpihczhqa.eu-west-1.es.amazonaws.com
     BASE_REPO: https://github.com/firehol/blocklist-ipsets.git
-    BLOCK_LISTS:
-      - blocklist*.ipset
-      - ipip_country/ipip_country_ch.netset
-      - dshield*.ipset
-      - zeus*.ipset
+    BLOCK_LISTS: "blocklist*.ipset,dshield*.ipset,zeus*.ipset"
   stackTags:
     Name: ${self:service}
     service_name: ${self:service}
@@ -46,6 +43,12 @@ custom:
 functions:
   index:
     handler: src/index.handler
+    vpc:
+      securityGroupIds:
+        - sg-b98dfbc4
+        - sg-000728d0503bebdb9
+      subnetIds:
+        - subnet-cc906296
     events:
       - http:
           path: create

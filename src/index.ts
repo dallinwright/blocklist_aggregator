@@ -1,13 +1,24 @@
 import {APIGatewayProxyResultV2, Callback, Context, Handler} from 'aws-lambda';
 
 // Javascript style imports, as they do not have typescript typedefs
-const fs = require("fs");
-const readline = require('readline');
+// const fs = require("fs");
+// const readline = require('readline');
 const glob = require("glob")
 const shell = require('shelljs')
+
 const AWS = require('aws-sdk');
-AWS.config.update({region: 'eu-west-1'});
-const ddb = new AWS.DynamoDB.DocumentClient();
+const {Client} = require('@elastic/elasticsearch');
+const accessKeyId = AWS.config.credentials.accessKeyId;
+const secretAccessKey = AWS.config.credentials.secretAccessKey;
+
+const client = new Client({
+    accessKeyId: accessKeyId,
+    secretAccessKey: secretAccessKey,
+    service: 'es',
+    region: process.env.ES_REGION,
+    node: process.env.ES_ENDPOINT
+});
+
 
 export function createResponse(statusCode: number, body: any): APIGatewayProxyResultV2 {
     /**
@@ -29,8 +40,7 @@ export function createResponse(statusCode: number, body: any): APIGatewayProxyRe
     }
 }
 
-
-export async function cloneRepo(repo: string | undefined): Promise<string | Error> {
+export async function cloneRepo(repo: string | undefined): Promise<any> {
     if (repo) {
         const gitPath = repo.slice(repo.lastIndexOf('/') + 1);
         const path = gitPath.slice(0, gitPath.lastIndexOf('.'));
@@ -63,77 +73,75 @@ function getMatchingFiles(list: string | undefined, clonedPath: string): string[
     return matchingFiles;
 }
 
-async function getAggregateIPS(files: string[]): Promise<Set<string>> {
-    const ipSet: Set<string> = new Set();
+//
+// async function getAggregateIPS(files: string[]): Promise<Set<string>> {
+//     const ipSet: Set<string> = new Set();
+//
+//     for (const file of files) {
+//         const rd = readline.createInterface({
+//             input: fs.createReadStream(file, 'utf8'),
+//             output: process.stdout,
+//             terminal: false,
+//         });
+//
+//         for await (const line of rd) {
+//             if (!line.startsWith('#')) {
+//                 ipSet.add(line)
+//             }
+//         }
+//     }
+//
+//     return ipSet;
+// }
 
-    for (const file of files) {
-        const rd = readline.createInterface({
-            input: fs.createReadStream(file, 'utf8'),
-            output: process.stdout,
-            terminal: false,
-        });
-
-        for await (const line of rd) {
-            if (!line.startsWith('#')) {
-                ipSet.add(line)
-            }
-        }
-    }
-
-    return ipSet;
-}
-
-async function writeToDynamoDB(tableName: string | undefined, ips: Set<string>) {
-    if (tableName) {
-        const ipArr = [...ips];
-        const chunkSize = 25;
-
-        for (let i = 0; i < ipArr.length; i += chunkSize) {
-            const chunk = ipArr.slice(i, i + chunkSize);
-            const requestArr = [];
-
-            for (const ip of chunk) {
-                const requestBody = {
-                    PutRequest: {
-                        Item: {
-                            "IP": ip
-                        }
-                    }
-                }
-
-                requestArr.push(requestBody);
-            }
-
-            const params = {
-                RequestItems: {
-                    [tableName]: [
-                        ...requestArr
-                    ]
-                }
-            }
-
-            await ddb.batchWrite(params).promise();
-            console.log('Successfully wrote batch ' + i + ' through ' + (i + chunkSize));
-        }
-
-        return 'success';
-    } else {
-        throw new Error("No table name provided");
-    }
-}
+// async function writeToDynamoDB(tableName: string | undefined, ips: Set<string>) {
+//     if (tableName) {
+//         const ipArr = [...ips];
+//         const chunkSize = 25;
+//
+//         for (let i = 0; i < ipArr.length; i += chunkSize) {
+//             const chunk = ipArr.slice(i, i + chunkSize);
+//             const requestArr = [];
+//
+//             for (const ip of chunk) {
+//                 const requestBody = {
+//                     PutRequest: {
+//                         Item: {
+//                             "IP": ip
+//                         }
+//                     }
+//                 }
+//
+//                 requestArr.push(requestBody);
+//             }
+//
+//             const params = {
+//                 RequestItems: {
+//                     [tableName]: [
+//                         ...requestArr
+//                     ]
+//                 }
+//             }
+//
+//             await ddb.batchWrite(params).promise();
+//             console.log('Successfully wrote batch ' + i + ' through ' + (i + chunkSize));
+//         }
+//
+//         return 'success';
+//     } else {
+//         throw new Error("No table name provided");
+//     }
+// }
 
 
 export const handler: Handler = async (event: any, context: Context, callback: Callback) => {
     try {
-        // const clonedPath = await cloneRepo(process.env.BASE_REPO);
-        const matchingFiles: string[] = getMatchingFiles(process.env.BLOCK_LISTS, 'blocklist-ipsets');
-
-        console.log('Found matching files...');
+        const clonedPath: string = await cloneRepo(process.env.BASE_REPO);
+        const matchingFiles: string[] = getMatchingFiles(process.env.BLOCK_LISTS, clonedPath);
         console.log(matchingFiles);
-        const aggregateIps = await getAggregateIPS(matchingFiles);
+        const clusterInfo = await client.info();
+        console.log(clusterInfo);
 
-        const response = await writeToDynamoDB(process.env.TABLE_NAME, aggregateIps);
-        console.log(response);
 
         return createResponse(200, 'ok');
     } catch (e) {
