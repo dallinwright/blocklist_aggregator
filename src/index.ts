@@ -5,8 +5,9 @@ const fs = require("fs");
 const readline = require('readline');
 const glob = require("glob")
 const shell = require('shelljs')
-
-// const ddb = new AWS.DynamoDB.DocumentClient()
+const AWS = require('aws-sdk');
+AWS.config.update({region: 'eu-west-1'});
+const ddb = new AWS.DynamoDB.DocumentClient();
 
 export function createResponse(statusCode: number, body: any): APIGatewayProxyResultV2 {
     /**
@@ -27,6 +28,7 @@ export function createResponse(statusCode: number, body: any): APIGatewayProxyRe
         body: JSON.stringify(body)
     }
 }
+
 
 export async function cloneRepo(repo: string | undefined): Promise<string | Error> {
     if (repo) {
@@ -82,7 +84,21 @@ async function getAggregateIPS(files: string[]): Promise<Set<string>> {
 }
 
 async function writeToDynamoDB(ips: Set<string>) {
-    console.log(ips.size);
+    console.log(ips.size)
+    const params = {
+        RequestItems: {
+            'TABLE_NAME': process.env.TABLE_NAME,
+            PutRequest: {
+                Item: {
+                    IP: '1.1.1.1'
+                }
+            }
+        }
+    }
+
+    console.log('calling batch');
+
+    return await ddb.batchWrite(params).promise();
 }
 
 export const handler: Handler = async (event: any, context: Context, callback: Callback) => {
@@ -95,6 +111,8 @@ export const handler: Handler = async (event: any, context: Context, callback: C
         const aggregateIps = await getAggregateIPS(matchingFiles);
 
         await writeToDynamoDB(aggregateIps);
+        // await writeToDynamoDB();
+
 
         return createResponse(200, 'ok');
     } catch (e) {
