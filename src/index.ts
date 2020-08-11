@@ -102,7 +102,7 @@ export const handler: Handler = async (event: any, context: Context, callback: C
         const matchingFiles: string[] = getMatchingFiles(process.env.BLOCK_LISTS, clonedPath);
         const aggregateIps: Set<string> = await getAggregateIPS(matchingFiles);
 
-        console.log('IP LIST SIZE: ' + aggregateIps.size);
+        console.log('Total IPs to Block: ' + aggregateIps.size);
 
         // Create today's index
         await createIndex();
