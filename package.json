@@ -11,6 +11,8 @@
   "dependencies": {
     "@types/aws-lambda": "^8.10.59",
     "aws-lambda": "^1.0.6",
+    "aws-sdk": "^2.730.0",
+    "readline": "^1.3.0",
     "serverless-dynamodb-local": "^0.2.39",
     "serverless-iam-roles-per-function": "^2.0.2",
     "serverless-mocha-plugin": "^1.12.0",

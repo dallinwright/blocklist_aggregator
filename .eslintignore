@@ -8,3 +8,5 @@ build
 .serverless
 .nyc_output
 blocklist_aggregator
+blocklist-ipsets
+.eslintrc.js
