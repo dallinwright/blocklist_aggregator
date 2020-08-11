@@ -13,6 +13,7 @@ provider:
   runtime: nodejs12.x
   stage: ${opt:stage, 'dev'}
   region: eu-west-1
+  timeout: 900 # The default is 60
   iamRoleStatements:
     - Effect: "Allow"
       Action:
@@ -24,6 +25,7 @@ provider:
   environment:
     ES_REGION: eu-west-1
     ES_ENDPOINT: https://vpc-clillab-d5cxi6isskimi4uqzrpihczhqa.eu-west-1.es.amazonaws.com
+    ES_INDEX: blocklist
     BASE_REPO: https://github.com/firehol/blocklist-ipsets.git
     BLOCK_LISTS: "blocklist*.ipset,dshield*.ipset,zeus*.ipset"
   stackTags:
@@ -49,12 +51,12 @@ functions:
         - sg-000728d0503bebdb9
       subnetIds:
         - subnet-cc906296
-    events:
-      - http:
-          path: create
-          method: get
-          cors: true
-      - http:
-          path: create
-          method: post
-          cors: true
+#    events:
+#      - http:
+#          path: create
+#          method: get
+#          cors: true
+#      - http:
+#          path: create
+#          method: post
+#          cors: true
