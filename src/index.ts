@@ -1,18 +1,25 @@
 import {Callback, Context, Handler} from 'aws-lambda';
 
-const shell = require('shelljs');
+const fs = require("fs");
+const readline = require('readline');
+const glob = require("glob")
+const shell = require('shelljs')
 
-const createResponse = (statusCode: number, body: any) => ({
-    statusCode: statusCode,
-    headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify(body)
-});
+// const ddb = new AWS.DynamoDB.DocumentClient()
 
-export async function cloneRepo(repo: string | undefined) {
+function createResponse(statusCode: number, body: any) {
+    return {
+        statusCode: statusCode,
+        headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+    }
+}
+
+export async function cloneRepo(repo: string | undefined): Promise<string | Error> {
     if (repo) {
         const gitPath = repo.slice(repo.lastIndexOf('/') + 1);
         const path = gitPath.slice(0, gitPath.lastIndexOf('.'));
@@ -23,26 +30,62 @@ export async function cloneRepo(repo: string | undefined) {
         if (shell.error()) {
             throw new Error(shell.error());
         }
+
+        return path;
     } else {
         throw new Error("No repo given for ip blacklist baseline");
     }
 }
 
-function getLists(list: string | undefined) {
+function getMatchingFiles(list: string | undefined, clonedPath: string): string[] {
+    let matchingFiles: string[] = [];
+
     if (list) {
-        const lists = list.split(',');
-        console.log('BLOCK LISTS');
-        console.log(lists);
-    } else {
-        throw new Error("No Env var specifying block lists.");
+        const fileList = list.split(',');
+
+        for (const file of fileList) {
+            const files = glob.sync(clonedPath + '/' + file);
+            matchingFiles = matchingFiles.concat(files);
+        }
     }
+
+    return matchingFiles;
 }
 
+async function getAggregateIPS(files: string[]): Promise<Set<string>> {
+    const ipSet: Set<string> = new Set();
+
+    for (const file of files) {
+        const rd = readline.createInterface({
+            input: fs.createReadStream(file, 'utf8'),
+            output: process.stdout,
+            terminal: false,
+        });
+
+        for await (const line of rd) {
+            if (!line.startsWith('#')) {
+                ipSet.add(line)
+            }
+        }
+    }
+
+    return ipSet;
+}
+
+async function writeToDynamoDB(ips: Set<string>) {
+    console.log(ips.size);
+}
 
 export const handler: Handler = async (event: any, context: Context, callback: Callback) => {
     try {
-        await cloneRepo(process.env.BASE_REPO);
-        getLists(process.env.BLOCK_LISTS);
+        // const clonedPath = await cloneRepo(process.env.BASE_REPO);
+        const matchingFiles: string[] = getMatchingFiles(process.env.BLOCK_LISTS, 'blocklist-ipsets');
+
+        console.log('Found matching files...');
+        console.log(matchingFiles);
+        const aggregateIps = await getAggregateIPS(matchingFiles);
+
+        await writeToDynamoDB(aggregateIps);
 
         return createResponse(200, 'ok');
     } catch (e) {

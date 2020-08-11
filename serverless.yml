@@ -25,11 +25,10 @@ provider:
     TABLE_NAME: blocklist-${opt:stage, 'dev'}
     BASE_REPO: https://github.com/firehol/blocklist-ipsets.git
     BLOCK_LISTS:
-      - blocklist*
-      - spamhaus_edrop
-      - spamhaus_drop
-      - dshield
-      - zeus
+      - blocklist*.ipset
+      - ipip_country/ipip_country_ch.netset
+      - dshield*.ipset
+      - zeus*.ipset
   stackTags:
     Name: ${self:service}
     service_name: ${self:service}
