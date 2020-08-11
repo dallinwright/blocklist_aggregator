@@ -1,4 +1,4 @@
-import {Callback, Context, Handler} from 'aws-lambda';
+import {APIGatewayProxyResultV2, Callback, Context, Handler} from 'aws-lambda';
 
 // Javascript style imports, as they do not have typescript typedefs
 const fs = require("fs");
@@ -8,14 +8,14 @@ const shell = require('shelljs')
 
 // const ddb = new AWS.DynamoDB.DocumentClient()
 
-export function createResponse(statusCode: number, body: any) {
+export function createResponse(statusCode: number, body: any): APIGatewayProxyResultV2 {
     /**
      * Create API Gateway formatted response
      * @function createResponse
      * @public
      * @param  {number} statusCode HTTP Status Code
      * @param {body} JSON Event response body
-     * @return API Gateway formatted JSON response
+     * @return {any} API Gateway formatted JSON response
      */
     return {
         statusCode: statusCode,
