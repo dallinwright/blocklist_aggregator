@@ -14,6 +14,7 @@ const client = new Client({
     node: process.env.ES_ENDPOINT
 });
 
+
 export async function createIndex() {
     if (!process.env.ES_INDEX) {
         throw new Error('Index provided to create is undefined');
@@ -24,8 +25,12 @@ export async function createIndex() {
     const clusterInfo = await client.info();
     console.log(clusterInfo);
 
+    const d = new Date();
+    const prettyDate = d.getFullYear().toString() + "-" + ((d.getMonth() + 1).toString().length == 2 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1).toString()) + "-" + (d.getDate().toString().length == 2 ? d.getDate().toString() : "0" + d.getDate().toString());
+    const datedIndexName = process.env.ES_INDEX + '-' + prettyDate;
+
     return client.indices.create({
-        index: process.env.ES_INDEX,
+        index: datedIndexName,
         body: {
             mappings: {
                 properties: {
@@ -33,6 +38,20 @@ export async function createIndex() {
                 }
             }
         }
+    }, {ignore: [400]});
+}
+
+export async function deleteIndex() {
+    if (!process.env.ES_INDEX) {
+        throw new Error('Index provided to create is undefined');
+    }
+
+    const yesterday = (d => new Date(d.setDate(d.getDate() - 1)))(new Date);
+    const prettyDate = yesterday.getFullYear().toString() + "-" + ((yesterday.getMonth() + 1).toString().length == 2 ? (yesterday.getMonth() + 1).toString() : "0" + (yesterday.getMonth() + 1).toString()) + "-" + (yesterday.getDate().toString().length == 2 ? yesterday.getDate().toString() : "0" + yesterday.getDate().toString());
+    const datedIndexName = process.env.ES_INDEX + '-' + prettyDate;
+
+    return client.indices.delete({
+        index: datedIndexName,
     }, {ignore: [400]});
 }
 
@@ -45,8 +64,7 @@ export async function bulkWriteToES(ips: Set<string>) {
     const ipArr: string[] = [...ips];
     const chunkSize = 25;
 
-    for (let i = 0; i < 25; i += chunkSize) {
-        // for (let i = 0; i < ipArr.length; i += chunkSize) {
+    for (let i = 0; i < ipArr.length; i += chunkSize) {
         const chunk = ipArr.slice(i, i + chunkSize);
         const esItems: ESEntry[] = [];
 

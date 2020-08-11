@@ -1,5 +1,5 @@
 import {APIGatewayProxyResultV2, Callback, Context, Handler} from 'aws-lambda';
-import {bulkWriteToES, createIndex} from "./elasticsearch";
+import {bulkWriteToES, createIndex, deleteIndex} from "./elasticsearch";
 
 // Javascript style imports, as they do not have typescript typedefs
 const fs = require("fs");
@@ -104,12 +104,14 @@ export const handler: Handler = async (event: any, context: Context, callback: C
 
         console.log('IP LIST SIZE: ' + aggregateIps.size);
 
-        const indexStatus = await createIndex();
-        
-        console.log('Result of index creation');
-        console.log(indexStatus);
+        // Create today's index
+        await createIndex();
 
         const response = await bulkWriteToES(aggregateIps);
+
+        // If successful (it would error before here) delete the previous days index
+        await deleteIndex();
+
         return createResponse(200, response);
     } catch (e) {
         return createResponse(503, e.message);
