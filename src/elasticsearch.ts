@@ -87,6 +87,7 @@ export async function bulkWriteToES(ips: Set<string>) {
                 }
             })
             console.log(erroredDocuments);
+            throw new Error(erroredDocuments.toString());
         }
 
         console.log('Successfully wrote batch ' + i + ' through ' + (i + chunkSize));
