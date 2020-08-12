@@ -7,3 +7,5 @@ jspm_packages
 .idea
 .build
 blocklist-ipsets
+blocklist_aggregator
+.nyc_output
