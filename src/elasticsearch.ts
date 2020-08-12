@@ -15,7 +15,13 @@ const client = new Client({
 });
 
 
-export async function createIndex() {
+export async function createIndex(): Promise<any> {
+    /**
+     * Create elasticsearch index using the supplied anv var, followed by today's date in ISO format yyyy-mm-dd
+     * @function createIndex
+     * @public
+     * @return {any} response from es create index
+     */
     if (!process.env.ES_INDEX) {
         throw new Error('Index provided to create is undefined');
     }
@@ -41,7 +47,13 @@ export async function createIndex() {
     }, {ignore: [400]});
 }
 
-export async function deleteIndex() {
+export async function deleteIndex(): Promise<any> {
+    /**
+     * Create elasticsearch index using the supplied anv var, followed by yesterdays's date in ISO format yyyy-mm-dd
+     * @function deleteIndex
+     * @public
+     * @return {any} response from es create index
+     */
     if (!process.env.ES_INDEX) {
         throw new Error('Index provided to create is undefined');
     }
@@ -55,7 +67,13 @@ export async function deleteIndex() {
     }, {ignore: [400]});
 }
 
-export async function bulkWriteToES(ips: Set<string>) {
+export async function bulkWriteToES(ips: Set<string>): Promise<any> {
+    /**
+     * Bulk write our ip's to ES, in chunks.
+     * @function bulkWriteToES
+     * @public
+     * @return {any} response from es create index
+     */
     if (!process.env.ES_INDEX) {
         throw new Error('Provided index to bulk write is undefined');
     }
