@@ -3,16 +3,20 @@ import {ESError} from "./interfaces/ESError";
 
 const AWS = require('aws-sdk');
 const {Client} = require('@elastic/elasticsearch');
-const accessKeyId = AWS.config.credentials.accessKeyId;
-const secretAccessKey = AWS.config.credentials.secretAccessKey;
+let client: any;
 
-const client = new Client({
-    accessKeyId: accessKeyId,
-    secretAccessKey: secretAccessKey,
-    service: 'es',
-    region: process.env.ES_REGION,
-    node: process.env.ES_ENDPOINT
-});
+if (AWS && AWS.config && AWS.config.credentials) {
+    const accessKeyId = AWS.config.credentials.accessKeyId;
+    const secretAccessKey = AWS.config.credentials.secretAccessKey;
+
+    client = new Client({
+        accessKeyId: accessKeyId,
+        secretAccessKey: secretAccessKey,
+        service: 'es',
+        region: process.env.ES_REGION,
+        node: process.env.ES_ENDPOINT
+    });
+}
 
 export function buildIndexName(date: Date) {
     const prettyDate = date.getFullYear().toString() + "-" +
@@ -69,7 +73,7 @@ export async function deleteIndex(index: string): Promise<any> {
     }
 
     console.log('Deleting index: ' + index);
-    
+
     return client.indices.delete({
         index: index,
     }, {ignore: [400]});
