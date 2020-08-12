@@ -1,0 +1,59 @@
+service: blocklist-aggregator
+app: blocklist-aggregator
+org: dallinwright01
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+  - serverless-dynamodb-local
+  - serverless-tag-api-gateway
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:stage, 'dev'}
+  region: eu-west-1
+  timeout: 900 # The default is 60
+  tracing:
+    lambda: true # Optional, can be true (true equals 'Active'), 'Active' or 'PassThrough'
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "ec2:CreateNetworkInterface"
+        - "dynamodb:*"
+        - "cloudwatch:*"
+        - "invoke-api:*"
+        - "secretsmanager:GetSecretValue"
+        - "kms:Decrypt"
+      Resource:
+        - "*"
+  environment:
+    ES_REGION: eu-west-1
+    ES_INDEX: blocklist
+    BASE_REPO: https://github.com/firehol/blocklist-ipsets.git
+    BLOCK_LISTS: "blocklist*.ipset,dshield*.ipset,zeus*.ipset,dshield*.netset"
+  stackTags:
+    Name: ${self:service}
+    service_name: ${self:service}
+    environment: ${opt:stage, self:provider.stage}
+    managed_by: sls
+
+custom:
+  apiGatewayTags:
+    Name: ${self:service}-APIGateway
+    environment: ${opt:stage, self:provider.stage}
+    managed_by: sls
+    stackName: ${self:service}
+    infrastructure_tier: APIGateway
+
+functions:
+  index:
+    handler: src/index.handler
+    events:
+      - schedule: cron(0 6 * * ? *)
+    vpc:
+      securityGroupIds:
+        - sg-b98dfbc4
+        - sg-000728d0503bebdb9
+      subnetIds:
+        - subnet-00ce54658dc57b763

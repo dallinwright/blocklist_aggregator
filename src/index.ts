@@ -1,5 +1,6 @@
 import {APIGatewayProxyResultV2, Handler} from 'aws-lambda';
-import {buildIndexName, bulkWriteToES, createIndex, deleteIndex} from "./elasticsearch";
+import {getESEndpoint} from "./secretManager";
+import {buildIndexName, bulkWriteToES, createIndex, deleteIndex, initializeESClient} from "./elasticsearch";
 
 // Javascript style imports, as they do not have typescript typedefs
 const fs = require("fs");
@@ -143,23 +144,28 @@ export const handler: Handler = async () => {
 
         // Using array expansion, this converts our set of unique items to an iterable array.
         // Get a full list of unique IP's across unique filenames
-        const items = [...matchingFiles].flat();
+        const items: string[] = [...matchingFiles].flat();
         const aggregateIps: Set<string> = await getAggregateIPS(items);
 
         console.log('Total IPs to Block: ' + aggregateIps.size);
 
+        // Decrypt and pull secret containing ES_ENDPOINT. To abstract and not store specifics in a public repo.
+        // and then initialize the ES client connection.
+        const esEndpoint = await getESEndpoint();
+        const esClient = initializeESClient(esEndpoint);
+
         // Create today's index
         const today = new Date();
         const indexToday = buildIndexName(today);
-        await createIndex(indexToday);
+        await createIndex(esClient, indexToday);
 
         // Bulk write to ES
-        const response = await bulkWriteToES(aggregateIps);
+        const response = await bulkWriteToES(esClient, aggregateIps);
 
         // If successful (it would error before here) delete the previous days index
         const yesterday = (d => new Date(d.setDate(d.getDate() - 1)))(new Date);
         const indexYesterday = buildIndexName(yesterday);
-        await deleteIndex(indexYesterday);
+        await deleteIndex(esClient, indexYesterday);
 
         return createResponse(200, response);
     } catch (e) {
