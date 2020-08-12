@@ -36,6 +36,7 @@ export function buildIndexName(date: Date): string {
      * @param {Date} date to construct index name with
      * @return {any} index name with date in yyyy-mm-dd
      */
+
     const prettyDate = date.getFullYear().toString() + "-" +
         ((date.getMonth() + 1).toString().length == 2 ? (date.getMonth() + 1).toString() : "0" +
             (date.getMonth() + 1).toString()) + "-" +
