@@ -160,7 +160,7 @@ export const handler: Handler = async () => {
         await createIndex(esClient, indexToday);
 
         // Bulk write to ES
-        const response = await bulkWriteToES(esClient, aggregateIps);
+        const response = await bulkWriteToES(esClient, indexToday, aggregateIps);
 
         // If successful (it would error before here) delete the previous days index
         const yesterday = (d => new Date(d.setDate(d.getDate() - 1)))(new Date);

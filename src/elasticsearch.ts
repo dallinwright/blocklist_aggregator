@@ -97,7 +97,7 @@ export async function deleteIndex(esClient: any, index: string): Promise<any> {
     }, {ignore: [400]});
 }
 
-export async function bulkWriteToES(esClient: any, ips: Set<string>): Promise<any> {
+export async function bulkWriteToES(esClient: any, index: string, ips: Set<string>): Promise<any> {
     /**
      * Bulk write our ip's to ES, in chunks.
      * @function bulkWriteToES
@@ -124,7 +124,7 @@ export async function bulkWriteToES(esClient: any, ips: Set<string>): Promise<an
             esItems.push(body);
         }
 
-        const body = esItems.flatMap((doc: any) => [{index: {_index: process.env.ES_INDEX}}, doc]);
+        const body = esItems.flatMap((doc: any) => [{index: {_index: index}}, doc]);
 
         const {body: bulkResponse} = await esClient.bulk({refresh: true, body})
 
