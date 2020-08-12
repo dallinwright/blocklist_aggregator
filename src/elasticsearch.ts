@@ -43,6 +43,8 @@ export async function createIndex(index: string): Promise<any> {
     // Delete index if it exists and recreate.
     await deleteIndex(index);
 
+    console.log('Creating index: ' + index);
+
     return client.indices.create({
         index: index,
         body: {
@@ -66,6 +68,8 @@ export async function deleteIndex(index: string): Promise<any> {
         throw new Error('Index provided to create is undefined');
     }
 
+    console.log('Deleting index: ' + index);
+    
     return client.indices.delete({
         index: index,
     }, {ignore: [400]});
