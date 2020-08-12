@@ -1,4 +1,4 @@
-import {APIGatewayProxyResultV2, Callback, Context, Handler} from 'aws-lambda';
+import {APIGatewayProxyResultV2, Handler} from 'aws-lambda';
 import {bulkWriteToES, createIndex, deleteIndex} from "./elasticsearch";
 
 // Javascript style imports, as they do not have typescript typedefs
@@ -10,7 +10,7 @@ const http = require('isomorphic-git/http/node')
 
 export function createResponse(statusCode: number, body: any): APIGatewayProxyResultV2 {
     /**
-     * Create API Gateway formatted response
+     * Create API Gateway formatted response, useful even if not using api gateway
      * @function createResponse
      * @public
      * @param  {number} statusCode HTTP Status Code
@@ -28,7 +28,13 @@ export function createResponse(statusCode: number, body: any): APIGatewayProxyRe
     }
 }
 
-export async function cloneRepo(): Promise<any> {
+export async function cloneRepo(): Promise<string> {
+    /**
+     * Clone a given repo to the lambda writable /tmp directory
+     * @function cloneRepo
+     * @public
+     * @return {string} directory name of newly cloned repo
+     */
     if (!process.env.BASE_REPO) {
         throw new Error("No repo given for ip blacklist baseline");
     }
@@ -51,16 +57,28 @@ export async function cloneRepo(): Promise<any> {
     return gitDir;
 }
 
-function getMatchingFiles(list: string | undefined, clonedPath: string): string[] {
+export function getMatchingFiles(clonedPath: string): Set<string> {
+    /**
+     * Takes a list of files in string format, and returns all matching files. Supports wildcard matching.
+     * @function cloneRepo
+     * @public
+     * @return {string[]} Array of matching files.
+     */
     console.log('Beginning to search for matching files');
-    let matchingFiles: string[] = [];
+    let matchingFiles: Set<string> = new Set<string>();
+
+    if (!process.env.BLOCK_LISTS) {
+        throw new Error("No block list given");
+    }
+
+    const list = process.env.BLOCK_LISTS;
 
     if (list) {
         const fileList = list.split(',');
 
-        for (const file of fileList) {
-            const files = glob.sync('/tmp/' + clonedPath + '/' + file);
-            matchingFiles = matchingFiles.concat(files);
+        for (const item of fileList) {
+            const file = glob.sync('/tmp/' + clonedPath + '/' + item);
+            matchingFiles = matchingFiles.add(file);
         }
     }
 
@@ -69,7 +87,14 @@ function getMatchingFiles(list: string | undefined, clonedPath: string): string[
     return matchingFiles;
 }
 
-async function getAggregateIPS(files: string[]): Promise<Set<string>> {
+export async function getAggregateIPS(files: string[]): Promise<Set<string>> {
+    /**
+     * Combined ips from across all files into a unique set
+     * @function getAggregateIPS
+     * @public
+     * @param  {string[]} array of filenames
+     * @return {Promise<Set<string>>} A set of ips in an async format
+     */
     console.log('Beginning to aggregate unique set of ips from across files');
     const ipSet: Set<string> = new Set();
 
@@ -91,16 +116,23 @@ async function getAggregateIPS(files: string[]): Promise<Set<string>> {
     return ipSet;
 }
 
-export const handler: Handler = async (event: any, context: Context, callback: Callback) => {
+export const handler: Handler = async () => {
+    /**
+     * AWS Lambda handler
+     * @function handler
+     * @public
+     * @return {any} A success or error api-gateway compatible response.
+     */
     console.log('Beginning aggregator execution');
-    console.log('Event');
-    console.log(event);
 
     try {
         // Build our data structure of IP's based upon the daily repo update
         const clonedPath: string = await cloneRepo();
-        const matchingFiles: string[] = getMatchingFiles(process.env.BLOCK_LISTS, clonedPath);
-        const aggregateIps: Set<string> = await getAggregateIPS(matchingFiles);
+        const matchingFiles: Set<string> = getMatchingFiles(clonedPath);
+
+        // Using array expansion, this converts our set of unique items to an iterable array.
+        // Get a full list of unique IP's across unique filenames
+        const aggregateIps: Set<string> = await getAggregateIPS([...matchingFiles]);
 
         console.log('Total IPs to Block: ' + aggregateIps.size);
 
