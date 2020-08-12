@@ -110,7 +110,7 @@ export async function bulkWriteToES(esClient: any, ips: Set<string>): Promise<an
 
     console.log('Beginning ES bulk write');
     const ipArr: string[] = [...ips];
-    const chunkSize = 25;
+    const chunkSize = 250;
 
     for (let i = 0; i < ipArr.length; i += chunkSize) {
         const chunk = ipArr.slice(i, i + chunkSize);
