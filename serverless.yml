@@ -23,14 +23,15 @@ provider:
         - "dynamodb:*"
         - "cloudwatch:*"
         - "invoke-api:*"
+        - "secretsmanager:GetSecretValue"
+        - "kms:Decrypt"
       Resource:
         - "*"
   environment:
     ES_REGION: eu-west-1
-    ES_ENDPOINT: https://vpc-clillab-d5cxi6isskimi4uqzrpihczhqa.eu-west-1.es.amazonaws.com
     ES_INDEX: blocklist
     BASE_REPO: https://github.com/firehol/blocklist-ipsets.git
-    BLOCK_LISTS: "blocklist*.ipset,dshield*.ipset,zeus*.ipset"
+    BLOCK_LISTS: "blocklist*.ipset,dshield*.ipset,zeus*.ipset,dshield*.netset"
   stackTags:
     Name: ${self:service}
     service_name: ${self:service}

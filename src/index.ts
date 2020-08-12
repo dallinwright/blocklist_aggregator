@@ -1,12 +1,14 @@
 import {APIGatewayProxyResultV2, Handler} from 'aws-lambda';
-import {buildIndexName, bulkWriteToES, createIndex, deleteIndex} from "./elasticsearch";
+import {getESEndpoint} from "./secretManager";
+import {buildIndexName, bulkWriteToES, createIndex, deleteIndex, initializeESClient} from "./elasticsearch";
 
 // Javascript style imports, as they do not have typescript typedefs
 const fs = require("fs");
 const readline = require('readline');
-const glob = require("glob")
-const git = require('isomorphic-git')
-const http = require('isomorphic-git/http/node')
+const glob = require("glob");
+const git = require('isomorphic-git');
+const http = require('isomorphic-git/http/node');
+const getIPRange = require('get-ip-range');
 
 export function createResponse(statusCode: number, body: any): APIGatewayProxyResultV2 {
     /**
@@ -98,6 +100,7 @@ export async function getAggregateIPS(files: string[]): Promise<Set<string>> {
     console.log('Beginning to aggregate unique set of ips from across files');
     const ipSet: Set<string> = new Set();
 
+    // Take all entries that aren't comments
     for (const file of files) {
         const rd = readline.createInterface({
             input: fs.createReadStream(file, 'utf8'),
@@ -107,7 +110,16 @@ export async function getAggregateIPS(files: string[]): Promise<Set<string>> {
 
         for await (const line of rd) {
             if (!line.startsWith('#')) {
-                ipSet.add(line)
+                // Logic to convert ip ranges to ips, if given entry is not already an ip
+                if (line.includes('/')) {
+                    const ipArr = getIPRange(line);
+
+                    for (const ip of ipArr) {
+                        ipSet.add(ip);
+                    }
+                } else {
+                    ipSet.add(line);
+                }
             }
         }
     }
@@ -132,22 +144,28 @@ export const handler: Handler = async () => {
 
         // Using array expansion, this converts our set of unique items to an iterable array.
         // Get a full list of unique IP's across unique filenames
-        const items = [...matchingFiles].flat();
+        const items: string[] = [...matchingFiles].flat();
         const aggregateIps: Set<string> = await getAggregateIPS(items);
 
         console.log('Total IPs to Block: ' + aggregateIps.size);
 
+        // Decrypt and pull secret containing ES_ENDPOINT. To abstract and not store specifics in a public repo.
+        // and then initialize the ES client connection.
+        const esEndpoint = await getESEndpoint();
+        const esClient = initializeESClient(esEndpoint);
+
         // Create today's index
         const today = new Date();
         const indexToday = buildIndexName(today);
-        await createIndex(indexToday);
+        await createIndex(esClient, indexToday);
 
-        const response = await bulkWriteToES(aggregateIps);
+        // Bulk write to ES
+        const response = await bulkWriteToES(esClient, aggregateIps);
 
         // If successful (it would error before here) delete the previous days index
         const yesterday = (d => new Date(d.setDate(d.getDate() - 1)))(new Date);
         const indexYesterday = buildIndexName(yesterday);
-        await deleteIndex(indexYesterday);
+        await deleteIndex(esClient, indexYesterday);
 
         return createResponse(200, response);
     } catch (e) {
