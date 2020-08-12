@@ -12,19 +12,18 @@ The service runs in AWS and uses the AWS managed elasticsearch service to store 
 
 ### Instructions
 
-The service executes as an AWS Lambda and can be configured via environment variables.
+The service executes as an AWS Lambda and can be configured via environment variables in the `severless.yml` file. The exception is the elasticsearch endpoint URL, it must be stored in AWS Secret Manager. Typically, you would be fine to use an environment variable but in a public repo, it is not a good idea to publish infrastructure detail to that extent.
 
-```yaml
-ES_REGION: eu-west-1
-ES_ENDPOINT: https://vpc-my-endpoint.eu-west-1.es.amazonaws.com
-ES_INDEX: blocklist
-BASE_REPO: https://github.com/firehol/blocklist-ipsets.git
-BLOCK_LISTS: "blocklist*.ipset,dshield*.ipset,zeus*.ipset,dshield*.netset"
-```
 
-### License
-TBD
+##### Successful Lambda execution example
 
-### Contributing
+![Part 1 success](./screenshots/cw.png?raw=true)
 
-TBD
+
+##### Examples of how it could be expanded to support canary deployment, alerting, etc.
+
+Canary Deployment plugin
+https://www.serverless.com/blog/manage-canary-deployments-lambda-functions-serverless-framework
+
+Cloudwatch alerts
+https://www.serverless.com/plugins/serverless-plugin-aws-alerts
