@@ -14,8 +14,17 @@ const client = new Client({
     node: process.env.ES_ENDPOINT
 });
 
+export function buildIndexName(date: Date) {
+    const prettyDate = date.getFullYear().toString() + "-" +
+        ((date.getMonth() + 1).toString().length == 2 ? (date.getMonth() + 1).toString() : "0" +
+            (date.getMonth() + 1).toString()) + "-" +
+        (date.getDate().toString().length == 2 ? date.getDate().toString() : "0" +
+            date.getDate().toString());
 
-export async function createIndex(): Promise<any> {
+    return process.env.ES_INDEX + '-' + prettyDate;
+}
+
+export async function createIndex(index: string): Promise<any> {
     /**
      * Create elasticsearch index using the supplied anv var, followed by today's date in ISO format yyyy-mm-dd
      * @function createIndex
@@ -31,12 +40,11 @@ export async function createIndex(): Promise<any> {
     const clusterInfo = await client.info();
     console.log(clusterInfo);
 
-    const d = new Date();
-    const prettyDate = d.getFullYear().toString() + "-" + ((d.getMonth() + 1).toString().length == 2 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1).toString()) + "-" + (d.getDate().toString().length == 2 ? d.getDate().toString() : "0" + d.getDate().toString());
-    const datedIndexName = process.env.ES_INDEX + '-' + prettyDate;
+    // Delete index if it exists and recreate.
+    await deleteIndex(index);
 
     return client.indices.create({
-        index: datedIndexName,
+        index: index,
         body: {
             mappings: {
                 properties: {
@@ -47,7 +55,7 @@ export async function createIndex(): Promise<any> {
     }, {ignore: [400]});
 }
 
-export async function deleteIndex(): Promise<any> {
+export async function deleteIndex(index: string): Promise<any> {
     /**
      * Create elasticsearch index using the supplied anv var, followed by yesterdays's date in ISO format yyyy-mm-dd
      * @function deleteIndex
@@ -58,12 +66,8 @@ export async function deleteIndex(): Promise<any> {
         throw new Error('Index provided to create is undefined');
     }
 
-    const yesterday = (d => new Date(d.setDate(d.getDate() - 1)))(new Date);
-    const prettyDate = yesterday.getFullYear().toString() + "-" + ((yesterday.getMonth() + 1).toString().length == 2 ? (yesterday.getMonth() + 1).toString() : "0" + (yesterday.getMonth() + 1).toString()) + "-" + (yesterday.getDate().toString().length == 2 ? yesterday.getDate().toString() : "0" + yesterday.getDate().toString());
-    const datedIndexName = process.env.ES_INDEX + '-' + prettyDate;
-
     return client.indices.delete({
-        index: datedIndexName,
+        index: index,
     }, {ignore: [400]});
 }
 

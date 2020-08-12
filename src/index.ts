@@ -1,5 +1,5 @@
 import {APIGatewayProxyResultV2, Handler} from 'aws-lambda';
-import {bulkWriteToES, createIndex, deleteIndex} from "./elasticsearch";
+import {buildIndexName, bulkWriteToES, createIndex, deleteIndex} from "./elasticsearch";
 
 // Javascript style imports, as they do not have typescript typedefs
 const fs = require("fs");
@@ -132,17 +132,22 @@ export const handler: Handler = async () => {
 
         // Using array expansion, this converts our set of unique items to an iterable array.
         // Get a full list of unique IP's across unique filenames
-        const aggregateIps: Set<string> = await getAggregateIPS([...matchingFiles]);
+        const items = [...matchingFiles].flat();
+        const aggregateIps: Set<string> = await getAggregateIPS(items);
 
         console.log('Total IPs to Block: ' + aggregateIps.size);
 
         // Create today's index
-        await createIndex();
+        const today = new Date();
+        const indexToday = buildIndexName(today);
+        await createIndex(indexToday);
 
         const response = await bulkWriteToES(aggregateIps);
 
         // If successful (it would error before here) delete the previous days index
-        await deleteIndex();
+        const yesterday = (d => new Date(d.setDate(d.getDate() - 1)))(new Date);
+        const indexYesterday = buildIndexName(yesterday);
+        await deleteIndex(indexYesterday);
 
         return createResponse(200, response);
     } catch (e) {
