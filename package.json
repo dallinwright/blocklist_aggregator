@@ -5,7 +5,7 @@
   "main": "index.js",
   "husky": {
     "hooks": {
-      "pre-commit": "npm run lint"
+      "pre-commit": "npm run lint && npm test"
     }
   },
   "dependencies": {
@@ -22,13 +22,12 @@
     "serverless-offline": "^6.5.0",
     "serverless-plugin-typescript": "^1.1.9",
     "serverless-pseudo-parameters": "^2.5.0",
-    "serverless-tag-api-gateway": "^1.0.0",
-    "shelljs": "^0.8.4"
+    "serverless-tag-api-gateway": "^1.0.0"
   },
   "scripts": {
     "run": "serverless invoke local --function index",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register 'tests/**/*.ts'"
+    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' ./node_modules/.bin/nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register 'tests/**/*.ts'"
   },
   "repository": {
     "type": "git",

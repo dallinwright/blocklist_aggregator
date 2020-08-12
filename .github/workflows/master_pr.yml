@@ -19,19 +19,14 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: NPM Install
-        run: npm install
-      - name: ESlint
-        uses: hallee/eslint-action@1.0.3
-        # GITHUB_TOKEN in forked repositories is read-only
-        # https://help.github.com/en/actions/reference/events-that-trigger-workflows#pull-request-event-pull_request
-        if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
-        with:
-          repo-token: ${{secrets.GITHUB_TOKEN}}
+      - name: Install
+        run: npm install && npm install --only=dev
+      - name: Lint
+        run: npm run lint
       - run: npm test
         env:
           CI: true
       - uses: actions/upload-artifact@v2
         with:
           name: coverageReport
-          path: .nyc_output
+          path: coverage
