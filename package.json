@@ -28,7 +28,7 @@
   "scripts": {
     "run": "serverless invoke local --function index",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc mocha -r ts-node/register 'tests/**/*.ts'"
+    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' nyc --reporter=lcov --reporter=text-summary mocha -r ts-node/register 'tests/**/*.ts'"
   },
   "repository": {
     "type": "git",
