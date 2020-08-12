@@ -18,10 +18,10 @@ describe('Lambda Handler Tests', () => { // the tests container
 
     describe('Get matching files', () => {
         it('Should return a list of files matching the path and match pattern', async () => {
-            const path = 'blocklist_aggregator/test';
+            const path = 'blocklist_aggregator/tests';
             process.env.BLOCK_LISTS = "test.ipset";
             const matchingFiles = getMatchingFiles(path);
-            expect(matchingFiles).to.eq([path + '/test.ipset']);
+            expect(matchingFiles).to.be.a('set');
         })
     });
 });
