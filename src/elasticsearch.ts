@@ -90,11 +90,20 @@ export async function deleteIndex(esClient: any, index: string): Promise<any> {
         throw new Error('Index provided to create is undefined');
     }
 
-    console.log('Deleting index: ' + index);
+    let response;
 
-    return esClient.indices.delete({
-        index: index,
-    }, {ignore: [400]});
+    try {
+        console.log('Deleting index: ' + index);
+        response = await esClient.indices.delete({
+            index: index,
+        }, {ignore: [400]});
+
+        console.log(index + ' deleted');
+    } catch (e) {
+        console.log(e.message);
+    }
+
+    return response;
 }
 
 export async function bulkWriteToES(esClient: any, index: string, ips: Set<string>): Promise<any> {
