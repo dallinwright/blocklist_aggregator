@@ -60,3 +60,7 @@ Alerting should be in place for production systems. We have monitoring for base 
 ##### Testing
 
 We have some minimal unit tests, but we are missing integration and e2e tests as well as code security analysis via tools like sonarqube among other things. Having these would increase code quality and decrease smells as the project evolves and grows. We do however use [Dependabot](https://dependabot.com/) to automate PR creation when dependent NPM packages have new releases which helps significantly.
+
+##### Versioned releases
+
+We should also have versioned packages that are deployable as is for the code portion, this helps in maintainability and organization of code/documentation among other things.
