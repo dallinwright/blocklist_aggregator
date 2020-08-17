@@ -52,6 +52,10 @@ functions:
     handler: src/index.handler
     events:
       - schedule: cron(0 6 * * ? *)
+      - http:
+          path: trigger
+          method: post
+          cors: true
     vpc:
       securityGroupIds:
         - sg-b98dfbc4
