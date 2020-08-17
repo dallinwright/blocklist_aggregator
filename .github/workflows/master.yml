@@ -1,9 +1,9 @@
 name: 'Deploy'
 
 on:
-  push:
-    branches:
-      - master
+  release:
+    types: # This configuration does not affect the page_build event above
+      - created
 
 jobs:
   deploy:
