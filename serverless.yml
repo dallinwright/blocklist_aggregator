@@ -37,7 +37,7 @@ provider:
     service_name: ${self:service}
     environment: ${opt:stage, self:provider.stage}
     managed_by: sls
-    version: ${file(../package.json):version}
+    version: ${file(./package.json):version}
 
 custom:
   apiGatewayTags:
