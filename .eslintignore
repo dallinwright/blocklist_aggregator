@@ -10,3 +10,4 @@ build
 blocklist_aggregator
 blocklist-ipsets
 .eslintrc.js
+docs/
